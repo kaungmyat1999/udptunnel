@@ -24,6 +24,19 @@ object VpnRepository {
 
     private val defaultPresets = listOf(
         UdpConfig(
+            profileName = "My Custom VPS Server",
+            serverHost = "",
+            serverPort = 5000,
+            udpPassword = "vps_password_123",
+            localPort = 1080,
+            bufferSize = 65535,
+            mtuSize = 1400,
+            primaryDns = "1.1.1.1",
+            secondaryDns = "8.8.8.8",
+            obfuscationMode = "XOR Cipher",
+            customPayload = "net_trick_payload_v2"
+        ),
+        UdpConfig(
             profileName = "Default UDP Server",
             serverHost = "udp.zivpn.com",
             serverPort = 5000,

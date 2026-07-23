@@ -3,6 +3,7 @@ package com.example.ui.viewmodel
 import android.content.Context
 import android.content.Intent
 import android.net.VpnService
+import android.widget.Toast
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.data.model.LogLevel
@@ -77,8 +78,23 @@ class VpnViewModel : ViewModel() {
             VpnRepository.addLog(LogLevel.INFO, "UI", "Disconnect action triggered by user.")
             UdpVpnService.stopVpn(context)
         } else {
+            val currentConfig = udpConfig.value
+            if (currentConfig.serverHost.isBlank() || currentConfig.serverHost == "your.vps.ip.here" || currentConfig.serverHost == "127.0.0.1") {
+                VpnRepository.addLog(
+                    LogLevel.ERROR,
+                    "UI",
+                    "Cannot connect: Please enter a valid VPS Server IP / Host address first."
+                )
+                Toast.makeText(context, "Please enter your VPS Server IP / Host address!", Toast.LENGTH_LONG).show()
+                return
+            }
+
             // Connect
-            VpnRepository.addLog(LogLevel.INFO, "UI", "Connect action triggered by user.")
+            VpnRepository.addLog(
+                LogLevel.INFO,
+                "UI",
+                "Connecting to VPS Server [${currentConfig.serverHost}:${currentConfig.serverPort}]..."
+            )
             
             val prepareIntent = VpnService.prepare(context)
             if (prepareIntent != null) {

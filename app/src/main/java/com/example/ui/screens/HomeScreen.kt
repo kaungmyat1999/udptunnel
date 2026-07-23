@@ -50,8 +50,11 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -122,7 +125,17 @@ fun HomeScreen(
             }
         )
 
-        Spacer(modifier = Modifier.height(28.dp))
+        Spacer(modifier = Modifier.height(14.dp))
+
+        // Quick VPS Server Configuration Box
+        VpsServerQuickInputCard(
+            config = config,
+            onUpdateConfig = { updatedConfig ->
+                viewModel.updateConfig(updatedConfig)
+            }
+        )
+
+        Spacer(modifier = Modifier.height(20.dp))
 
         // Cyber Power Toggle Button
         CyberPowerButton(
@@ -628,5 +641,157 @@ fun DetailRow(
                 fontFamily = FontFamily.Monospace
             )
         )
+    }
+}
+
+@Composable
+fun VpsServerQuickInputCard(
+    config: UdpConfig,
+    onUpdateConfig: (UdpConfig) -> Unit
+) {
+    var vpsHost by remember(config.serverHost) { mutableStateOf(config.serverHost) }
+    var vpsPort by remember(config.serverPort) { mutableStateOf(config.serverPort.toString()) }
+    var vpsPassword by remember(config.udpPassword) { mutableStateOf(config.udpPassword) }
+    var isExpanded by remember { mutableStateOf(config.serverHost.isBlank() || config.serverHost == "your.vps.ip.here") }
+
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .border(1.dp, if (config.serverHost.isBlank()) CyberAmber else CyberDarkCardBorder, RoundedCornerShape(16.dp)),
+        color = CyberDarkSurface,
+        tonalElevation = 4.dp
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Default.Dns,
+                        contentDescription = "VPS",
+                        tint = if (config.serverHost.isBlank()) CyberAmber else CyberCyan,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "VPS Server Details",
+                        style = MaterialTheme.typography.titleSmall.copy(
+                            fontWeight = FontWeight.Bold,
+                            color = CyberTextPrimary
+                        )
+                    )
+                }
+
+                TextButton(onClick = { isExpanded = !isExpanded }) {
+                    Text(
+                        text = if (isExpanded) "Collapse" else "Edit Server IP",
+                        color = CyberCyan,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+
+            if (isExpanded) {
+                Spacer(modifier = Modifier.height(10.dp))
+
+                OutlinedTextField(
+                    value = vpsHost,
+                    onValueChange = { vpsHost = it },
+                    label = { Text("VPS Server IP / Host Domain") },
+                    placeholder = { Text("e.g. 198.51.100.45 or vps.example.com") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = CyberCyan,
+                        unfocusedBorderColor = CyberDarkCardBorder,
+                        focusedLabelColor = CyberCyan,
+                        unfocusedLabelColor = CyberTextSecondary,
+                        focusedTextColor = CyberTextPrimary,
+                        unfocusedTextColor = CyberTextPrimary
+                    )
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    OutlinedTextField(
+                        value = vpsPort,
+                        onValueChange = { vpsPort = it },
+                        label = { Text("Port") },
+                        placeholder = { Text("5000") },
+                        singleLine = true,
+                        modifier = Modifier.weight(1f),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = CyberCyan,
+                            unfocusedBorderColor = CyberDarkCardBorder,
+                            focusedLabelColor = CyberCyan,
+                            unfocusedLabelColor = CyberTextSecondary,
+                            focusedTextColor = CyberTextPrimary,
+                            unfocusedTextColor = CyberTextPrimary
+                        )
+                    )
+
+                    OutlinedTextField(
+                        value = vpsPassword,
+                        onValueChange = { vpsPassword = it },
+                        label = { Text("UDP Pass") },
+                        placeholder = { Text("Password") },
+                        singleLine = true,
+                        modifier = Modifier.weight(1.5f),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = CyberCyan,
+                            unfocusedBorderColor = CyberDarkCardBorder,
+                            focusedLabelColor = CyberCyan,
+                            unfocusedLabelColor = CyberTextSecondary,
+                            focusedTextColor = CyberTextPrimary,
+                            unfocusedTextColor = CyberTextPrimary
+                        )
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Button(
+                    onClick = {
+                        val portNum = vpsPort.toIntOrNull() ?: 5000
+                        val newConfig = config.copy(
+                            serverHost = vpsHost.trim(),
+                            serverPort = portNum,
+                            udpPassword = vpsPassword.trim()
+                        )
+                        onUpdateConfig(newConfig)
+                        isExpanded = false
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(containerColor = CyberCyan),
+                    shape = RoundedCornerShape(10.dp)
+                ) {
+                    Text("Apply VPS Server Settings", color = CyberDarkSurface, fontWeight = FontWeight.Bold)
+                }
+            } else {
+                Spacer(modifier = Modifier.height(4.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = "Target: ",
+                        fontSize = 13.sp,
+                        color = CyberTextSecondary
+                    )
+                    Text(
+                        text = if (config.serverHost.isNotBlank()) "${config.serverHost}:${config.serverPort}" else "Not Set (Click Edit)",
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = if (config.serverHost.isNotBlank()) CyberEmerald else CyberAmber,
+                        fontFamily = FontFamily.Monospace
+                    )
+                }
+            }
+        }
     }
 }

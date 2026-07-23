@@ -99,7 +99,16 @@ class UdpVpnService : VpnService() {
 
         val config = VpnRepository.udpConfig.value
 
+        if (config.serverHost.isBlank() || config.serverHost == "your.vps.ip.here" || config.serverHost == "127.0.0.1") {
+            VpnRepository.addLog(LogLevel.ERROR, "Service", "No valid VPS Server host/IP configured. Connection aborted.")
+            VpnRepository.updateState(VpnState.DISCONNECTED)
+            stopSelf()
+            return
+        }
+
         try {
+            VpnRepository.addLog(LogLevel.INFO, "Service", "Resolving VPS Server Host: ${config.serverHost}:${config.serverPort}...")
+            
             // Build VPN Interface
             val builder = Builder()
                 .addAddress("10.0.0.2", 32)
@@ -130,13 +139,13 @@ class UdpVpnService : VpnService() {
             }
 
             // Start Foreground Notification
-            startForegroundWithNotification("Connected to ${config.serverHost}:${config.serverPort}")
+            startForegroundWithNotification("Connected to VPS: ${config.serverHost}:${config.serverPort}")
 
             VpnRepository.updateState(VpnState.CONNECTED)
             VpnRepository.addLog(
                 LogLevel.SUCCESS,
                 "Service",
-                "UDP Tunnel established successfully! Session: [${config.profileName}], Obfuscation: ${config.obfuscationMode}"
+                "UDP Tunnel established! Target VPS: [${config.serverHost}:${config.serverPort}], Obfuscation: ${config.obfuscationMode}"
             )
 
             // Start UDP Packet Loop & Stats tracking
@@ -148,7 +157,7 @@ class UdpVpnService : VpnService() {
             runStatsLoop()
 
         } catch (e: Exception) {
-            VpnRepository.addLog(LogLevel.ERROR, "Service", "Fatal error during VPN setup: ${e.localizedMessage}")
+            VpnRepository.addLog(LogLevel.ERROR, "Service", "Fatal error connecting to VPS server: ${e.localizedMessage}")
             e.printStackTrace()
             VpnRepository.updateState(VpnState.DISCONNECTED)
             stopSelf()
