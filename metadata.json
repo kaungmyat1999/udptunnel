@@ -1,0 +1,6 @@
+{
+  "name": "UDP Tunnel VPN",
+  "description": "Fast & secure UDP Tunnel VPN application with Cyber/Neon Material 3 UI, UDP configuration, and real-time terminal logs.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
