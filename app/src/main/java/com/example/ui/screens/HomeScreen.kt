@@ -38,6 +38,7 @@ import androidx.compose.material.icons.filled.Router
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material.icons.filled.Timer
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -80,6 +81,7 @@ import com.example.data.model.VpnState
 import com.example.ui.theme.CyberAmber
 import com.example.ui.theme.CyberCyan
 import com.example.ui.theme.CyberCyanGlow
+import com.example.ui.theme.CyberDarkBackground
 import com.example.ui.theme.CyberDarkCardBorder
 import com.example.ui.theme.CyberDarkSurface
 import com.example.ui.theme.CyberDarkSurfaceVariant
@@ -652,7 +654,10 @@ fun VpsServerQuickInputCard(
     var vpsHost by remember(config.serverHost) { mutableStateOf(config.serverHost) }
     var vpsPort by remember(config.serverPort) { mutableStateOf(config.serverPort.toString()) }
     var vpsPassword by remember(config.udpPassword) { mutableStateOf(config.udpPassword) }
+    var rcvWin by remember(config.receiveWindow) { mutableStateOf(config.receiveWindow.toString()) }
+    var testMode by remember(config.testMode) { mutableStateOf(config.testMode) }
     var isExpanded by remember { mutableStateOf(config.serverHost.isBlank() || config.serverHost == "your.vps.ip.here") }
+    var showGuideDialog by remember { mutableStateOf(false) }
 
     Surface(
         modifier = Modifier
@@ -677,7 +682,7 @@ fun VpsServerQuickInputCard(
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "VPS Server Details",
+                        text = "VPS ZiVPN Server Details",
                         style = MaterialTheme.typography.titleSmall.copy(
                             fontWeight = FontWeight.Bold,
                             color = CyberTextPrimary
@@ -685,13 +690,23 @@ fun VpsServerQuickInputCard(
                     )
                 }
 
-                TextButton(onClick = { isExpanded = !isExpanded }) {
-                    Text(
-                        text = if (isExpanded) "Collapse" else "Edit Server IP",
-                        color = CyberCyan,
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Bold
-                    )
+                Row {
+                    TextButton(onClick = { showGuideDialog = true }) {
+                        Text(
+                            text = "📖 Setup Guide",
+                            color = CyberAmber,
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                    TextButton(onClick = { isExpanded = !isExpanded }) {
+                        Text(
+                            text = if (isExpanded) "Collapse" else "Edit IP",
+                            color = CyberCyan,
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
                 }
             }
 
@@ -701,8 +716,8 @@ fun VpsServerQuickInputCard(
                 OutlinedTextField(
                     value = vpsHost,
                     onValueChange = { vpsHost = it },
-                    label = { Text("VPS Server IP / Host Domain") },
-                    placeholder = { Text("e.g. 198.51.100.45 or vps.example.com") },
+                    label = { Text("Thailand VPS Server IP / Host Domain") },
+                    placeholder = { Text("e.g. zivvpn.kaungmyat.site or 103.xxx.xxx.xxx") },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
@@ -724,8 +739,8 @@ fun VpsServerQuickInputCard(
                     OutlinedTextField(
                         value = vpsPort,
                         onValueChange = { vpsPort = it },
-                        label = { Text("Port") },
-                        placeholder = { Text("5000") },
+                        label = { Text("UDP Port") },
+                        placeholder = { Text("5666") },
                         singleLine = true,
                         modifier = Modifier.weight(1f),
                         colors = OutlinedTextFieldDefaults.colors(
@@ -741,8 +756,8 @@ fun VpsServerQuickInputCard(
                     OutlinedTextField(
                         value = vpsPassword,
                         onValueChange = { vpsPassword = it },
-                        label = { Text("UDP Pass") },
-                        placeholder = { Text("Password") },
+                        label = { Text("UDP Password") },
+                        placeholder = { Text("aisudp") },
                         singleLine = true,
                         modifier = Modifier.weight(1.5f),
                         colors = OutlinedTextFieldDefaults.colors(
@@ -756,15 +771,62 @@ fun VpsServerQuickInputCard(
                     )
                 }
 
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = "Receive Window: ",
+                            fontSize = 12.sp,
+                            color = CyberTextSecondary
+                        )
+                        OutlinedTextField(
+                            value = rcvWin,
+                            onValueChange = { rcvWin = it },
+                            singleLine = true,
+                            modifier = Modifier.width(60.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = CyberCyan,
+                                unfocusedBorderColor = CyberDarkCardBorder,
+                                focusedTextColor = CyberTextPrimary,
+                                unfocusedTextColor = CyberTextPrimary
+                            )
+                        )
+                    }
+
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = "Test Mode: ",
+                            fontSize = 12.sp,
+                            color = CyberTextSecondary
+                        )
+                        androidx.compose.material3.Switch(
+                            checked = testMode,
+                            onCheckedChange = { testMode = it },
+                            colors = androidx.compose.material3.SwitchDefaults.colors(
+                                checkedThumbColor = CyberDarkBackground,
+                                checkedTrackColor = CyberCyan
+                            )
+                        )
+                    }
+                }
+
                 Spacer(modifier = Modifier.height(12.dp))
 
                 Button(
                     onClick = {
-                        val portNum = vpsPort.toIntOrNull() ?: 5000
+                        val portNum = vpsPort.toIntOrNull() ?: 5666
+                        val winNum = rcvWin.toIntOrNull() ?: 2
                         val newConfig = config.copy(
                             serverHost = vpsHost.trim(),
                             serverPort = portNum,
-                            udpPassword = vpsPassword.trim()
+                            udpPassword = vpsPassword.trim(),
+                            receiveWindow = winNum,
+                            testMode = testMode
                         )
                         onUpdateConfig(newConfig)
                         isExpanded = false
@@ -773,25 +835,88 @@ fun VpsServerQuickInputCard(
                     colors = ButtonDefaults.buttonColors(containerColor = CyberCyan),
                     shape = RoundedCornerShape(10.dp)
                 ) {
-                    Text("Apply VPS Server Settings", color = CyberDarkSurface, fontWeight = FontWeight.Bold)
+                    Text("Save & Apply ZiVPN Settings", color = CyberDarkSurface, fontWeight = FontWeight.Bold)
                 }
             } else {
                 Spacer(modifier = Modifier.height(4.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = "Target VPS: ",
+                            fontSize = 12.sp,
+                            color = CyberTextSecondary
+                        )
+                        Text(
+                            text = if (config.serverHost.isNotBlank()) "${config.serverHost}:${config.serverPort}" else "Not Set",
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = if (config.serverHost.isNotBlank()) CyberEmerald else CyberAmber,
+                            fontFamily = FontFamily.Monospace
+                        )
+                    }
                     Text(
-                        text = "Target: ",
-                        fontSize = 13.sp,
+                        text = "Pass: ${config.udpPassword} | RCV: ${config.receiveWindow}",
+                        fontSize = 11.sp,
                         color = CyberTextSecondary
-                    )
-                    Text(
-                        text = if (config.serverHost.isNotBlank()) "${config.serverHost}:${config.serverPort}" else "Not Set (Click Edit)",
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = if (config.serverHost.isNotBlank()) CyberEmerald else CyberAmber,
-                        fontFamily = FontFamily.Monospace
                     )
                 }
             }
         }
+    }
+
+    if (showGuideDialog) {
+        AlertDialog(
+            onDismissRequest = { showGuideDialog = false },
+            title = {
+                Text("🇹🇭 Thailand VPS ZiVPN Setup Guide", color = CyberCyan, fontWeight = FontWeight.Bold)
+            },
+            text = {
+                Column(
+                    modifier = Modifier.verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Text(
+                        "ထိုင်း VPS (Ubuntu/Debian) ပေါ်တွင် ZiVPN UDP Server တပ်ဆင်ရန် နည်းလမ်း:",
+                        color = CyberTextPrimary,
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+
+                    Text("1️⃣ Terminal / SSH ဖွင့်ပြီး Command ရိုက်ပါ:", color = CyberAmber, fontSize = 12.sp)
+                    Surface(
+                        color = CyberDarkBackground,
+                        shape = RoundedCornerShape(8.dp),
+                        modifier = Modifier.fillMaxWidth().padding(4.dp)
+                    ) {
+                        Text(
+                            "ufw allow 5666/udp\nufw allow 5000/udp\nwget https://raw.githubusercontent.com/kaungmyat1999/zivpn-server/main/install.sh -O install.sh && chmod +x install.sh && ./install.sh",
+                            color = CyberEmerald,
+                            fontFamily = FontFamily.Monospace,
+                            fontSize = 11.sp,
+                            modifier = Modifier.padding(8.dp)
+                        )
+                    }
+
+                    Text("2️⃣ Default Configurations:", color = CyberAmber, fontSize = 12.sp)
+                    Text("• UDP Port: 5666 သို့မဟုတ် 5000\n• Password: aisudp (သို့) သင့်စိတ်ကြိုက်\n• Receive Window: 2 (သို့) 7", color = CyberTextSecondary, fontSize = 12.sp)
+
+                    Text("3️⃣ App ထဲတွင် ဖြည့်စွက်ရန်:", color = CyberAmber, fontSize = 12.sp)
+                    Text("• VPS IP / Domain: သင့် ထိုင်း VPS IP (ဥပမာ- 103.xxx.xxx.xxx)\n• Port: 5666\n• Pass: aisudp", color = CyberTextSecondary, fontSize = 12.sp)
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = { showGuideDialog = false },
+                    colors = ButtonDefaults.buttonColors(containerColor = CyberCyan)
+                ) {
+                    Text("နားလည်ပါပြီ", color = CyberDarkSurface, fontWeight = FontWeight.Bold)
+                }
+            },
+            containerColor = CyberDarkSurface
+        )
     }
 }

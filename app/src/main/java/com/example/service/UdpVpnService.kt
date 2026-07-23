@@ -114,7 +114,13 @@ class UdpVpnService : VpnService() {
                 .addAddress("10.0.0.2", 32)
                 .addRoute("0.0.0.0", 0)
                 .setMtu(config.mtuSize)
-                .setSession("UDP Tunnel - ${config.profileName}")
+                .setSession("ZiVPN UDP Tunnel - ${config.profileName}")
+
+            try {
+                builder.addDisallowedApplication(packageName)
+            } catch (e: Exception) {
+                VpnRepository.addLog(LogLevel.WARN, "Service", "Disallow app notice: ${e.message}")
+            }
 
             if (config.primaryDns.isNotBlank()) {
                 builder.addDnsServer(config.primaryDns)
@@ -145,15 +151,22 @@ class UdpVpnService : VpnService() {
             VpnRepository.addLog(
                 LogLevel.SUCCESS,
                 "Service",
-                "UDP Tunnel established! Target VPS: [${config.serverHost}:${config.serverPort}], Obfuscation: ${config.obfuscationMode}"
+                "UDP Tunnel established! Target VPS: [${config.serverHost}:${config.serverPort}], Pass: ${config.udpPassword}, RCV Win: ${config.receiveWindow}"
             )
 
             // Start UDP Packet Loop & Stats tracking
-            totalBytesSent = (1024..4096).random().toLong()
-            totalBytesReceived = (2048..8192).random().toLong()
+            totalBytesSent = 0L
+            totalBytesReceived = 0L
             durationSeconds = 0L
 
-            runPacketLoop(config.serverHost, config.serverPort, config.bufferSize, config.customPayload)
+            runPacketLoop(
+                host = config.serverHost,
+                port = config.serverPort,
+                bufferSize = config.bufferSize,
+                udpPassword = config.udpPassword,
+                receiveWindow = config.receiveWindow,
+                obfuscationMode = config.obfuscationMode
+            )
             runStatsLoop()
 
         } catch (e: Exception) {
@@ -168,7 +181,9 @@ class UdpVpnService : VpnService() {
         host: String,
         port: Int,
         bufferSize: Int,
-        payload: String
+        udpPassword: String,
+        receiveWindow: Int,
+        obfuscationMode: String
     ) {
         tunnelJob?.cancel()
         tunnelJob = serviceScope.launch {
@@ -179,44 +194,83 @@ class UdpVpnService : VpnService() {
                 protect(datagramSocket) // Protect socket from VPN routing loop
 
                 val serverAddress = InetAddress.getByName(host)
-                val handshakeData = "UDP_VPN_INIT:$payload".toByteArray(Charsets.UTF_8)
-                val initPacket = DatagramPacket(handshakeData, handshakeData.size, serverAddress, port)
-                
+
+                // Handshake Packet
+                val handshakeMsg = "ZIVPN_INIT:PASS=$udpPassword:RCV=$receiveWindow"
+                val handshakeBytes = handshakeMsg.toByteArray(Charsets.UTF_8)
+                val initPacket = DatagramPacket(handshakeBytes, handshakeBytes.size, serverAddress, port)
+
                 try {
                     datagramSocket.send(initPacket)
-                    totalBytesSent += handshakeData.size
-                    VpnRepository.addLog(LogLevel.SUCCESS, "UDP", "Handshake packet transmitted to $host:$port (${handshakeData.size} bytes)")
+                    totalBytesSent += handshakeBytes.size
+                    VpnRepository.addLog(LogLevel.SUCCESS, "UDP", "ZiVPN Handshake transmitted to $host:$port (Pass: $udpPassword)")
                 } catch (e: Exception) {
-                    VpnRepository.addLog(LogLevel.WARN, "UDP", "Initial UDP packet transmission notice: ${e.message}")
+                    VpnRepository.addLog(LogLevel.WARN, "UDP", "Handshake transmit notice: ${e.message}")
                 }
 
                 val pfd = vpnInterface ?: return@launch
                 val inputStream = FileInputStream(pfd.fileDescriptor)
                 val outputStream = FileOutputStream(pfd.fileDescriptor)
-                val buffer = ByteArray(bufferSize.coerceAtMost(65535))
 
-                VpnRepository.addLog(LogLevel.INFO, "UDP", "Entering UDP tunnel packet read/write proxy loop...")
+                VpnRepository.addLog(LogLevel.INFO, "UDP", "Entering ZiVPN UDP bi-directional proxy loop...")
 
-                while (isActive && vpnInterface != null) {
-                    try {
-                        if (inputStream.available() > 0) {
-                            val length = inputStream.read(buffer)
-                            if (length > 0) {
-                                totalBytesSent += length
-                                // Standard UDP forwarding simulation / wrap
-                                val packet = DatagramPacket(buffer, length, serverAddress, port)
-                                try {
-                                    datagramSocket.send(packet)
-                                } catch (_: Exception) {}
+                // Inbound Job: VPS -> Phone
+                val inboundJob = launch(Dispatchers.IO) {
+                    val recvBuffer = ByteArray(65535)
+                    val recvPacket = DatagramPacket(recvBuffer, recvBuffer.size)
+                    val xorKey = udpPassword.toByteArray(Charsets.UTF_8)
+
+                    while (isActive && vpnInterface != null) {
+                        try {
+                            datagramSocket.soTimeout = 1000
+                            datagramSocket.receive(recvPacket)
+                            val len = recvPacket.length
+                            if (len > 0) {
+                                totalBytesReceived += len
+                                if (obfuscationMode == "XOR Cipher" && xorKey.isNotEmpty()) {
+                                    for (i in 0 until len) {
+                                        recvBuffer[i] = (recvBuffer[i].toInt() xor xorKey[i % xorKey.size].toInt()).toByte()
+                                    }
+                                }
+                                outputStream.write(recvBuffer, 0, len)
                             }
-                        } else {
-                            delay(20)
+                        } catch (_: java.net.SocketTimeoutException) {
+                            // Expected timeout when idle
+                        } catch (e: Exception) {
+                            if (!isActive) break
+                            delay(50)
                         }
-                    } catch (e: Exception) {
-                        if (!isActive) break
-                        delay(100)
                     }
                 }
+
+                // Outbound Job: Phone -> VPS
+                val outboundJob = launch(Dispatchers.IO) {
+                    val sendBuffer = ByteArray(bufferSize.coerceIn(1200, 65535))
+                    val xorKey = udpPassword.toByteArray(Charsets.UTF_8)
+
+                    while (isActive && vpnInterface != null) {
+                        try {
+                            val len = inputStream.read(sendBuffer)
+                            if (len > 0) {
+                                totalBytesSent += len
+                                if (obfuscationMode == "XOR Cipher" && xorKey.isNotEmpty()) {
+                                    for (i in 0 until len) {
+                                        sendBuffer[i] = (sendBuffer[i].toInt() xor xorKey[i % xorKey.size].toInt()).toByte()
+                                    }
+                                }
+                                val dp = DatagramPacket(sendBuffer, len, serverAddress, port)
+                                datagramSocket.send(dp)
+                            }
+                        } catch (e: Exception) {
+                            if (!isActive) break
+                            delay(50)
+                        }
+                    }
+                }
+
+                inboundJob.join()
+                outboundJob.join()
+
             } catch (e: Exception) {
                 VpnRepository.addLog(LogLevel.WARN, "UDP", "Tunnel loop exception: ${e.localizedMessage}")
             } finally {

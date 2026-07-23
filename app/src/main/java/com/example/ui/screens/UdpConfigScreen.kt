@@ -85,6 +85,8 @@ fun UdpConfigScreen(viewModel: VpnViewModel) {
     var serverHost by remember(currentConfig) { mutableStateOf(currentConfig.serverHost) }
     var serverPort by remember(currentConfig) { mutableStateOf(currentConfig.serverPort.toString()) }
     var udpPassword by remember(currentConfig) { mutableStateOf(currentConfig.udpPassword) }
+    var receiveWindow by remember(currentConfig) { mutableStateOf(currentConfig.receiveWindow.toString()) }
+    var testMode by remember(currentConfig) { mutableStateOf(currentConfig.testMode) }
     var localPort by remember(currentConfig) { mutableStateOf(currentConfig.localPort.toString()) }
     var bufferSize by remember(currentConfig) { mutableStateOf(currentConfig.bufferSize.toString()) }
     var mtuSize by remember(currentConfig) { mutableStateOf(currentConfig.mtuSize.toString()) }
@@ -363,8 +365,10 @@ fun UdpConfigScreen(viewModel: VpnViewModel) {
                     val newConfig = UdpConfig(
                         profileName = profileName.ifBlank { "Custom Server" },
                         serverHost = serverHost.ifBlank { "127.0.0.1" },
-                        serverPort = serverPort.toIntOrNull() ?: 5000,
+                        serverPort = serverPort.toIntOrNull() ?: 5666,
                         udpPassword = udpPassword,
+                        receiveWindow = receiveWindow.toIntOrNull() ?: 2,
+                        testMode = testMode,
                         localPort = localPort.toIntOrNull() ?: 1080,
                         bufferSize = bufferSize.toIntOrNull() ?: 65535,
                         mtuSize = mtuSize.toIntOrNull() ?: 1400,
