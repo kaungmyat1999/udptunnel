@@ -905,7 +905,61 @@ fun VpsServerQuickInputCard(
                     Text("• UDP Port: 5666 သို့မဟုတ် 5000\n• Password: aisudp (သို့) သင့်စိတ်ကြိုက်\n• Receive Window: 2 (သို့) 7", color = CyberTextSecondary, fontSize = 12.sp)
 
                     Text("3️⃣ App ထဲတွင် ဖြည့်စွက်ရန်:", color = CyberAmber, fontSize = 12.sp)
-                    Text("• VPS IP / Domain: သင့် ထိုင်း VPS IP (ဥပမာ- 103.xxx.xxx.xxx)\n• Port: 5666\n• Pass: aisudp", color = CyberTextSecondary, fontSize = 12.sp)
+                    Text("• VPS IP / Domain: 157.85.97.140\n• Port: 5667 ( Admin Panel ရှိ UDP Port အတိုင်း)\n• Pass: aisudp", color = CyberTextSecondary, fontSize = 12.sp)
+
+                    Spacer(modifier = Modifier.height(6.dp))
+
+                    Text(
+                        "⚠️ ချိတ်ပြီး အင်တာနက်သုံးမရပါက ဖြေရှင်းရန် နည်းလမ်း (Troubleshooting):",
+                        color = CyberAmber,
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+
+                    Text("1. VPS တွင် IP Forwarding & NAT Rule ဖွင့်ပေးပါ:", color = CyberTextPrimary, fontSize = 12.sp)
+                    Surface(
+                        color = CyberDarkBackground,
+                        shape = RoundedCornerShape(8.dp),
+                        modifier = Modifier.fillMaxWidth().padding(4.dp)
+                    ) {
+                        Text(
+                            "echo 'net.ipv4.ip_forward=1' >> /etc/sysctl.conf\nsysctl -p\niptables -t nat -A POSTROUTING -j MASQUERADE",
+                            color = CyberEmerald,
+                            fontFamily = FontFamily.Monospace,
+                            fontSize = 11.sp,
+                            modifier = Modifier.padding(8.dp)
+                        )
+                    }
+
+                    Text("2. UDP Port & UFW Firewall ဖွင့်ထားကြောင်း စစ်ပါ:", color = CyberTextPrimary, fontSize = 12.sp)
+                    Surface(
+                        color = CyberDarkBackground,
+                        shape = RoundedCornerShape(8.dp),
+                        modifier = Modifier.fillMaxWidth().padding(4.dp)
+                    ) {
+                        Text(
+                            "ufw allow 5667/udp\nufw allow 5666/udp\nufw allow 5000/udp",
+                            color = CyberEmerald,
+                            fontFamily = FontFamily.Monospace,
+                            fontSize = 11.sp,
+                            modifier = Modifier.padding(8.dp)
+                        )
+                    }
+
+                    Text("3. ZiVPN Service ကို Restart လုပ်ပါ:", color = CyberTextPrimary, fontSize = 12.sp)
+                    Surface(
+                        color = CyberDarkBackground,
+                        shape = RoundedCornerShape(8.dp),
+                        modifier = Modifier.fillMaxWidth().padding(4.dp)
+                    ) {
+                        Text(
+                            "systemctl restart zivpn\n# သို့မဟုတ် zivpn-core restart",
+                            color = CyberEmerald,
+                            fontFamily = FontFamily.Monospace,
+                            fontSize = 11.sp,
+                            modifier = Modifier.padding(8.dp)
+                        )
+                    }
                 }
             },
             confirmButton = {
