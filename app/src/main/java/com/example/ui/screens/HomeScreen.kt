@@ -29,6 +29,7 @@ import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Dns
+import androidx.compose.material.icons.filled.Key
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.NetworkCheck
 import androidx.compose.material.icons.filled.PowerSettingsNew
@@ -536,6 +537,7 @@ fun ServerDetailAndPingCard(
             // Details List
             DetailRow(label = "Virtual Assigned IP", value = stats.assignedIp, icon = Icons.Default.CheckCircle, iconColor = CyberEmerald)
             DetailRow(label = "Remote UDP Endpoint", value = "${config.serverHost}:${config.serverPort}", icon = Icons.Default.Dns, iconColor = CyberCyan)
+            DetailRow(label = "UDP Pass / Password", value = config.udpPassword.ifBlank { "None" }, icon = Icons.Default.Key, iconColor = CyberAmber)
             DetailRow(label = "Primary / Alt DNS", value = "${config.primaryDns} / ${config.secondaryDns}", icon = Icons.Default.NetworkCheck, iconColor = CyberPurple)
             DetailRow(label = "Session Duration", value = stats.formatDuration(), icon = Icons.Default.Timer, iconColor = CyberAmber)
 

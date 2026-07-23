@@ -25,20 +25,22 @@ object VpnRepository {
     private val defaultPresets = listOf(
         UdpConfig(
             profileName = "Default UDP Server",
-            serverHost = "198.51.100.45",
+            serverHost = "udp.zivpn.com",
             serverPort = 5000,
+            udpPassword = "udp_pass_123456",
             localPort = 1080,
             bufferSize = 65535,
             mtuSize = 1400,
             primaryDns = "1.1.1.1",
             secondaryDns = "8.8.8.8",
             obfuscationMode = "XOR Cipher",
-            customPayload = "udp_tunnel_key_v2"
+            customPayload = "net_trick_payload_v2"
         ),
         UdpConfig(
             profileName = "Fast Gaming Tunnel",
-            serverHost = "103.245.208.12",
+            serverHost = "sg1.udptunnel.net",
             serverPort = 8080,
+            udpPassword = "game_pass_9988",
             localPort = 1081,
             bufferSize = 32768,
             mtuSize = 1350,
@@ -49,8 +51,9 @@ object VpnRepository {
         ),
         UdpConfig(
             profileName = "DNS Tunnel Proxy",
-            serverHost = "8.8.8.8",
+            serverHost = "dns.udpproxy.org",
             serverPort = 53,
+            udpPassword = "dns_pass_0011",
             localPort = 1053,
             bufferSize = 65535,
             mtuSize = 1420,
@@ -61,8 +64,9 @@ object VpnRepository {
         ),
         UdpConfig(
             profileName = "Custom VIP Relay",
-            serverHost = "45.132.224.11",
+            serverHost = "vip.server.net",
             serverPort = 9000,
+            udpPassword = "vip_pass_7788",
             localPort = 1090,
             bufferSize = 65535,
             mtuSize = 1500,

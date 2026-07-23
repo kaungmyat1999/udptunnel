@@ -2,22 +2,22 @@ package com.example.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-val CyberDarkBackground = Color(0xFF0B0F19)
-val CyberDarkSurface = Color(0xFF131B2E)
-val CyberDarkSurfaceVariant = Color(0xFF1A243B)
-val CyberDarkCardBorder = Color(0xFF2E3D5C)
+val CyberDarkBackground = Color(0xFF0A0C10)
+val CyberDarkSurface = Color(0xFF161B22)
+val CyberDarkSurfaceVariant = Color(0xFF1C212B)
+val CyberDarkCardBorder = Color(0xFF262C38)
 
-val CyberCyan = Color(0xFF00F0FF)
-val CyberCyanGlow = Color(0x3300F0FF)
-val CyberEmerald = Color(0xFF00FFA3)
-val CyberEmeraldGlow = Color(0x3300FFA3)
-val CyberPurple = Color(0xFFA855F7)
-val CyberAmber = Color(0xFFFFB800)
-val CyberNeonPink = Color(0xFFFF2E93)
+val CyberCyan = Color(0xFF00E5FF)
+val CyberCyanGlow = Color(0x3300E5FF)
+val CyberEmerald = Color(0xFF00E676)
+val CyberEmeraldGlow = Color(0x3300E676)
+val CyberPurple = Color(0xFFBB86FC)
+val CyberAmber = Color(0xFFFFB300)
+val CyberNeonPink = Color(0xFFFF4081)
 
-val CyberTextPrimary = Color(0xFFF8FAFC)
-val CyberTextSecondary = Color(0xFF94A3B8)
-val CyberTextMuted = Color(0xFF64748B)
+val CyberTextPrimary = Color(0xFFFFFFFF)
+val CyberTextSecondary = Color(0xFF9EA9BA)
+val CyberTextMuted = Color(0xFF636E7B)
 
-val CyberTerminalBg = Color(0xFF070A10)
-val CyberTerminalHeader = Color(0xFF0F172A)
+val CyberTerminalBg = Color(0xFF06080B)
+val CyberTerminalHeader = Color(0xFF12161E)

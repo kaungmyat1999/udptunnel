@@ -84,6 +84,7 @@ fun UdpConfigScreen(viewModel: VpnViewModel) {
     var profileName by remember(currentConfig) { mutableStateOf(currentConfig.profileName) }
     var serverHost by remember(currentConfig) { mutableStateOf(currentConfig.serverHost) }
     var serverPort by remember(currentConfig) { mutableStateOf(currentConfig.serverPort.toString()) }
+    var udpPassword by remember(currentConfig) { mutableStateOf(currentConfig.udpPassword) }
     var localPort by remember(currentConfig) { mutableStateOf(currentConfig.localPort.toString()) }
     var bufferSize by remember(currentConfig) { mutableStateOf(currentConfig.bufferSize.toString()) }
     var mtuSize by remember(currentConfig) { mutableStateOf(currentConfig.mtuSize.toString()) }
@@ -199,6 +200,16 @@ fun UdpConfigScreen(viewModel: VpnViewModel) {
                         keyboardType = KeyboardType.Number
                     )
                 }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // UDP Pass / Password Field
+                CyberTextField(
+                    value = udpPassword,
+                    onValueChange = { udpPassword = it },
+                    label = "UDP Pass / Password",
+                    icon = Icons.Default.Key
+                )
 
                 Spacer(modifier = Modifier.height(12.dp))
 
@@ -353,6 +364,7 @@ fun UdpConfigScreen(viewModel: VpnViewModel) {
                         profileName = profileName.ifBlank { "Custom Server" },
                         serverHost = serverHost.ifBlank { "127.0.0.1" },
                         serverPort = serverPort.toIntOrNull() ?: 5000,
+                        udpPassword = udpPassword,
                         localPort = localPort.toIntOrNull() ?: 1080,
                         bufferSize = bufferSize.toIntOrNull() ?: 65535,
                         mtuSize = mtuSize.toIntOrNull() ?: 1400,
@@ -379,6 +391,7 @@ fun UdpConfigScreen(viewModel: VpnViewModel) {
                         profileName = profileName.ifBlank { "Preset ${presets.size + 1}" },
                         serverHost = serverHost.ifBlank { "127.0.0.1" },
                         serverPort = serverPort.toIntOrNull() ?: 5000,
+                        udpPassword = udpPassword,
                         localPort = localPort.toIntOrNull() ?: 1080,
                         bufferSize = bufferSize.toIntOrNull() ?: 65535,
                         mtuSize = mtuSize.toIntOrNull() ?: 1400,
